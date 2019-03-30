@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.taleteller.animation.DrawableImage;
-import de.taleteller.animation.Target;
+import de.taleteller.animation.DrawPosition;
 import de.taleteller.animation.focus.Focus;
 import de.taleteller.canvas.TileHoveredListener;
 import de.taleteller.canvas.TileImageData;
@@ -67,7 +67,7 @@ implements TileDrawStateActivationListener
 	T_Tile selected_tile;
 	
 	/** moving target to draw the tiles */
-	Target target;
+	DrawPosition target;
 	
 	///////////////////////////////////////////////////////////////
 
@@ -79,7 +79,7 @@ implements TileDrawStateActivationListener
 		listeners_hover = new ArrayList<>();
 		listeners_selected = new ArrayList<>();
 		
-		target = new Target(0, 0, 0, 0);
+		target = new DrawPosition(0, 0, 0, 0);
 	}
 
 	///////////////////////////////////////////////////////////////

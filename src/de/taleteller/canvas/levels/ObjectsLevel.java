@@ -80,4 +80,8 @@ public class ObjectsLevel extends DrawingLevel {
 		objects.remove(obj);
 	}
 
+	public LinkedList<DrawableObject> getObjects() {
+		return objects;
+	}
+	
 }

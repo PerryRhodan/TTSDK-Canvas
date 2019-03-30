@@ -14,7 +14,7 @@
  */
 package de.taleteller.canvas.levels.objects;
 
-import de.taleteller.animation.Target;
+import de.taleteller.animation.DrawPosition;
 import de.taleteller.animation.focus.Focus;
 import de.taleteller.canvas.UpdateFunction;
 import javafx.scene.canvas.GraphicsContext;
@@ -31,9 +31,9 @@ import javafx.scene.canvas.GraphicsContext;
 public abstract class DrawableObject {
 	
 	/** current position, x y positions, width, height, rotation (degree) */
-	Target position_current;
+	DrawPosition position_current;
 	/** target position */
-	Target position_target;
+	DrawPosition position_target;
 	
 	/** update type */
 	UpdateFunction updatetype;
@@ -58,8 +58,8 @@ public abstract class DrawableObject {
 	 */
 	public DrawableObject(int x, int y, int w, int h, int rot
 			, UpdateFunction updatetype, double speedmod) {
-		position_current = new Target(x-1, y, w, h, rot);
-		position_target = new Target(x, y, w, h, rot);
+		position_current = new DrawPosition(x-1, y, w, h, rot);
+		position_target = new DrawPosition(x, y, w, h, rot);
 
 		visibility = true;
 		
