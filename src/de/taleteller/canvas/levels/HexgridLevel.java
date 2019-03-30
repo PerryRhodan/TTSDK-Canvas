@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.taleteller.animation.DrawableImage;
+import de.taleteller.animation.TileImageData;
 import de.taleteller.animation.DrawPosition;
 import de.taleteller.animation.focus.Focus;
 import de.taleteller.canvas.TileHoveredListener;
-import de.taleteller.canvas.TileImageData;
 import de.taleteller.canvas.TileSelectedListener;
 import de.taleteller.grid.Tile;
 import de.taleteller.grid.World2D;
@@ -57,8 +57,10 @@ implements TileDrawStateActivationListener
 	@SuppressWarnings("rawtypes")
 	World2D grid;
 	
-	/** the image data set used to draw the tiles. */
-	TileImageData image_data;
+	/** the image data set used to draw the tiles
+	 *  if they do not have any defined on their
+	 *  own. */
+	TileImageData base_image_data;
 	
 	/** currently hovered tile */
 	T_Tile hovered_tile;
@@ -71,10 +73,12 @@ implements TileDrawStateActivationListener
 	
 	///////////////////////////////////////////////////////////////
 
-	public HexgridLevel(int x, int y, World2D<T_Tiledata, T_Tile> world, TileImageData imageData) {
+	public HexgridLevel(int x, int y
+			, World2D<T_Tiledata, T_Tile> world
+			, TileImageData baseImageData) {
 		super(x, y);
 		this.grid = world;
-		this.image_data = imageData;
+		this.base_image_data = baseImageData;
 		
 		listeners_hover = new ArrayList<>();
 		listeners_selected = new ArrayList<>();
@@ -85,7 +89,7 @@ implements TileDrawStateActivationListener
 	///////////////////////////////////////////////////////////////
 
 	public void Draw(Focus focus) {
-		DrawableImage img = image_data.getImg_default();
+		DrawableImage img = base_image_data.getImg_default();
 		T_Tile tile = null;
 		
 		int focus_bound_X_left = calcFocusBound_X_left(focus);
@@ -102,37 +106,49 @@ implements TileDrawStateActivationListener
 				tile.setHovered(false);
 				/* and then update it accordingly */
 				if(tile.equals(selected_tile)) {
-					img = image_data.getImg_selected();
+					img = base_image_data.getImg_selected();
 					tile.setSelected(true);
-					drawTile(img, grid.getTiles()[i][j], focus, 0.0);
+					drawTile(img, grid.getTiles()[i][j], focus, 0.5); // TODO make this alpha value configurable as well
 				}
 				if(tile.equals(hovered_tile)) {
-					img = image_data.getImg_hover();
+					img = base_image_data.getImg_hover();
 					tile.setHovered(true);
-					drawTile(img, grid.getTiles()[i][j], focus, 0.0);
+					drawTile(img, grid.getTiles()[i][j], focus, 0.5); // TODO make this alpha value configurable as well
 				}
 				/* draw states */
 				for (TileDrawStateMemberData stateData : tile.getDrawStateMemberData()) {
 					if(stateData.getState().isActive()) {
+						/* use specific image data of the
+						 * tile state if available */
+						TileImageData used_img_data = base_image_data;
+						if(stateData.getState().getImage_data() != null)
+							used_img_data = stateData.getState().getImage_data();
+						
 						/* tile images */
-						img = image_data.getFromValue(stateData.getDraw_value()
+						img = used_img_data.getFromValue(stateData.getDraw_value()
 									, stateData.getDraw_value_max());
 						
 						drawTile(img, tile, focus, stateData.getAlpha());
 
 						/* border images */
 						if(stateData.isDrawTop())
-							drawTile(image_data.getImg_border_top(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_top()
+									, tile, focus, stateData.getAlpha());
 						if(stateData.isDrawTopright())
-							drawTile(image_data.getImg_border_topright(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_topright()
+									, tile, focus, stateData.getAlpha());
 						if(stateData.isDrawBottomright())
-							drawTile(image_data.getImg_border_bottomright(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_bottomright()
+									, tile, focus, stateData.getAlpha());
 						if(stateData.isDrawBottom())
-							drawTile(image_data.getImg_border_bottom(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_bottom()
+									, tile, focus, stateData.getAlpha());
 						if(stateData.isDrawBottomleft())
-							drawTile(image_data.getImg_border_bottomleft(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_bottomleft()
+									, tile, focus, stateData.getAlpha());
 						if(stateData.isDrawTopleft())
-							drawTile(image_data.getImg_border_topleft(), tile, focus, stateData.getAlpha());
+							drawTile(used_img_data.getImg_border_topleft()
+									, tile, focus, stateData.getAlpha());
 					
 					}
 				}
@@ -186,17 +202,14 @@ implements TileDrawStateActivationListener
 
 	// Test whether or not given hextile at (x,y) is currently visible
 	// based on the given focus.
-	// TODO improve it
 	protected boolean outOfFocus(int x, int y, Focus focus) {
-		double x_px = (x + 1) * grid.getTile_size() * 0.75 * focus.getZoom();
-		if (x_px > getWidth() + grid.getTile_size() - focus.getX())
+		if(calcFocusBound_X_right(focus) < x)
 			return true;
-		if (x_px < -focus.getX())
+		if(calcFocusBound_Y_bottom(focus) < y)
 			return true;
-		double y_px = y  * grid.getTile_size() * focus.getZoom();
-		if (y_px - grid.getTile_size() > getHeight() - focus.getY() - grid.getTile_size())//-1 to allow the edges
+		if(calcFocusBound_X_left(focus) > x)
 			return true;
-		if (y_px + grid.getTile_size() < 0)					 //+1 to allow the edges
+		if(calcFocusBound_Y_top(focus) > y)
 			return true;
 
 		return false;
@@ -299,24 +312,47 @@ implements TileDrawStateActivationListener
 	
 	//////////////////////////////////////////////////////////////////
 	
+	// TODO for now assume 1920pixels in width
+	// and 1080 in height TODO
+	
 	private int calcFocusBound_X_left(Focus focus) {
 		return Math.max(0
-				, (int)(-(focus.getX() * 1.34)/(grid.getTile_size()) - 1)/grid.getTile_size());
+				, (int)(
+							(
+									-(focus.getX() * 1.34)
+									/(double)grid.getTile_size()
+							) / focus.getZoom()
+						)  - 1
+				);
 	}
 	
 	private int calcFocusBound_X_right(Focus focus) {
 		return Math.min(grid.getTiles().length
-				, (int)((((getWidth() - focus.getX()) * 1.34)/grid.getTile_size() + 2) / focus.getZoom()));
+				,(int) (
+						calcFocusBound_X_left(focus)
+						+ (1920.0/(grid.getTile_size() * 0.75))/focus.getZoom()
+						+ 1)
+				);
 	}
 
 	private int calcFocusBound_Y_top(Focus focus) {
 		return Math.max(0
-				, (int)(-(focus.getY() * 1.00)/grid.getTile_size() - 1)/grid.getTile_size());
+				, (int)(
+							(
+									-(focus.getY() * 1.00)
+									/(double)grid.getTile_size()
+							) / focus.getZoom()
+						) - 1
+				);
 	}
 	
 	private int calcFocusBound_Y_bottom(Focus focus) {
 		return Math.min(grid.getTiles()[0].length
-				, (int)(((getHeight() -(focus.getY() * 1.00))/grid.getTile_size()) / focus.getZoom()) +1);
+				, (int) (
+						calcFocusBound_Y_top(focus)
+						+ (1080.0/(double)grid.getTile_size())/focus.getZoom()
+						+ 1)
+				);
 	}
 	
 	//////////////////////////////////////////////////////////////////
