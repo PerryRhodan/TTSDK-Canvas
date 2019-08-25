@@ -19,6 +19,7 @@ import java.util.LinkedList;
 
 import de.taleteller.animation.focus.Focus;
 import de.taleteller.canvas.levels.objects.DrawableObject;
+import javafx.application.Platform;
 
 
 /**
@@ -35,8 +36,7 @@ public class ObjectsLevel extends DrawingLevel {
 	
 	public ObjectsLevel(int width, int height) {
 		super(width, height);
-		objects = new LinkedList<>();
-		
+		objects = new LinkedList<>();		
 	}
 	
 	@Override
@@ -70,6 +70,11 @@ public class ObjectsLevel extends DrawingLevel {
 		}
 	}
 	
+	private void clearAll() {
+		this.getGraphicsContext2D().clearRect(0
+				, 0, this.getWidth(), this.getHeight());
+	}
+	
 	///////////////////////////////////////////////
 	
 	public void addObject(DrawableObject obj) {
@@ -78,6 +83,28 @@ public class ObjectsLevel extends DrawingLevel {
 	
 	public void removeObject(DrawableObject obj) {
 		objects.remove(obj);
+		this.forceUpdate();
+		
+		// force a clear after objects were removed
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				clearAll();
+			}
+		});
+	}
+	
+	public void removeAllObjects() {
+		objects.clear();
+		this.forceUpdate();
+		
+		// force a clear after objects were removed
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				clearAll();
+			}
+		});
 	}
 
 	public LinkedList<DrawableObject> getObjects() {
