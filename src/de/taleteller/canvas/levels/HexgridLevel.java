@@ -71,6 +71,9 @@ implements TileDrawStateActivationListener
 	/** moving target to draw the tiles */
 	DrawPosition target;
 	
+	private final double widthToHeightFct = 74.0 / 64.0;
+	private final double heightToWidthFct = 64.0 / 74.0;
+	
 	///////////////////////////////////////////////////////////////
 
 	public HexgridLevel(int x, int y
@@ -192,9 +195,9 @@ implements TileDrawStateActivationListener
 			return;
 
 		/* draw image */
-		target.setX((int)(0.75 * x * grid.getTile_size()));
+		target.setX((int)(heightToWidthFct * x * grid.getTile_size()));
 		target.setY((int)(y * grid.getTile_size() + off/focus.getZoom()));
-		target.setW((int)grid.getTile_size());
+		target.setW((int)(grid.getTile_size() * widthToHeightFct));
 		target.setH((int)grid.getTile_size());
 		target.setAlpha(alpha);
 		img.Draw(getGraphicsContext2D(), target, focus);	//this method also takes care of zoom
@@ -286,12 +289,12 @@ implements TileDrawStateActivationListener
 		
 		// check if an even or an off column was hit:
 		int off = 0;
-		if ((int) (fx / (focus.getZoom() * 0.75 * grid.getTile_size())) % 2 == 0)
+		if ((int) (fx / (focus.getZoom() * heightToWidthFct * grid.getTile_size())) % 2 == 0)
 			off = 0;
 		else
 			off = (int) (focus.getZoom() * (grid.getTile_size() / 2));
 		
-		int hote_x = (int) (fx / (0.75 * grid.getTile_size() * focus.getZoom()));
+		int hote_x = (int) (fx / (heightToWidthFct * grid.getTile_size() * focus.getZoom()));
 		int hote_y = (int) ((fy - off) / (grid.getTile_size() * focus.getZoom()));
 		
 		return new Point(hote_x, hote_y);
@@ -304,7 +307,7 @@ implements TileDrawStateActivationListener
 		if (tile_x % 2 != 0)
 			off = (int) (focus.getZoom() * (grid.getTile_size() / 2));
 		
-		int x_pxl = (int) (focus.getZoom() * 0.75 * (tile_x * grid.getTile_size()) + focus.getX());
+		int x_pxl = (int) (focus.getZoom() * heightToWidthFct * (tile_x * grid.getTile_size()) + focus.getX());
 		int y_pxl = (int) ((focus.getZoom() * tile_y * grid.getTile_size()) + focus.getY() + off);
 		
 		return new Point(x_pxl, y_pxl);
@@ -319,7 +322,7 @@ implements TileDrawStateActivationListener
 		return Math.max(0
 				, (int)(
 							(
-									-(focus.getX() * 1.34)
+									-(focus.getX() * widthToHeightFct)
 									/(double)grid.getTile_size()
 							) / focus.getZoom()
 						)  - 1
@@ -330,7 +333,7 @@ implements TileDrawStateActivationListener
 		return Math.min(grid.getTiles().length
 				,(int) (
 						calcFocusBound_X_left(focus)
-						+ (1920.0/(grid.getTile_size() * 0.75))/focus.getZoom()
+						+ (1920.0/(grid.getTile_size() * heightToWidthFct))/focus.getZoom()
 						+ 1)
 				);
 	}

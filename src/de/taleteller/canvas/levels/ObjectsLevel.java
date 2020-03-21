@@ -65,6 +65,7 @@ public class ObjectsLevel extends DrawingLevel {
 
 	@Override
 	public void Draw(Focus focus) {
+		// TODO NEED MUTEX HERE AND WHEN OBJECT GETS DELETED!!
 		for (DrawableObject obj : objects) {
 			obj.Draw(getGraphicsContext2D(), focus);
 		}
